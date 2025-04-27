@@ -1,9 +1,3 @@
-//Real-time velocity estimation and low-pass filtering
-//Velocity-based adaptive PID tuning
-//Full PID with prediction and deceleration zone
-//Dynamic PWM with ramping and deceleration handling
-//Stores/loads current, min, and max positions
-
 
 #include <EEPROM.h>  // Library for EEPROM to store position
 
@@ -15,9 +9,9 @@
 #define IN1 45        // Motor driver input 1
 
 volatile int pos = 0;  // Current position
-int maxPos = 0;        // Maximum position
+int maxPos = 0;        // Maximum position 21
 int minPos = 0;        // Minimum position
-const int INITIAL_POS = 25; // Initial position
+const int INITIAL_POS = 15; // Initial position
 
 // PID Variables
 float Kp = 2.0;    // Proportional gain (tune this)
@@ -83,6 +77,7 @@ void loop() {
       Serial.println(maxPos);
     }
     while (Serial.available()) Serial.read();
+   Serial.println(pos);
   }
 }
 
@@ -188,13 +183,16 @@ void handleLimitHit() {
     setMotor(-1, 150, PWM, IN1, IN2);  
     delay(500);  
     setMotor(0, 0, PWM, IN1, IN2);
+
     Serial.println("Returning to initial position...");
     moveToPosition(INITIAL_POS);  
+
   } else if (digitalRead(LOWER_LIMIT_PIN) == LOW) {
     Serial.println("Lower limit hit, moving upward briefly...");
     setMotor(1, 150, PWM, IN1, IN2);  
     delay(500);  
     setMotor(0, 0, PWM, IN1, IN2);
+
     Serial.println("Returning to initial position...");
     moveToPosition(INITIAL_POS);  
   }
@@ -203,10 +201,10 @@ void handleLimitHit() {
 // Motor control function ()
 void setMotor(int dir, int pwmVal, int pwm, int in1, int in2) {
   analogWrite(pwm, pwmVal);  
-  if (dir == -1) {  
+  if (dir == -1) {        //down
     digitalWrite(in1, LOW);
     digitalWrite(in2, HIGH);
-  } else if (dir == 1) {  
+  } else if (dir == 1) {  //up
     digitalWrite(in1, HIGH);
     digitalWrite(in2, LOW);
   } else {  
@@ -215,7 +213,7 @@ void setMotor(int dir, int pwmVal, int pwm, int in1, int in2) {
   }
 }
 
-// Sensor interrupt function()
+// Sensor interrupt function(postion counting)
 void readSensor() {
   static int lastState = HIGH;  
   static unsigned long lastInterruptTime = 0;
@@ -265,8 +263,8 @@ void calibratePosition() {
   delay(500);  
   setMotor(0, 0, PWM, IN1, IN2);
 
-  Serial.println("Moving to initial position...");
-  moveToPosition(INITIAL_POS);  
+  // Serial.println("Moving to initial position...");
+  // moveToPosition(INITIAL_POS);  
   EEPROM.write(0, pos);  
   Serial.print("Calibration complete, stopped at position: ");
   Serial.println(pos);

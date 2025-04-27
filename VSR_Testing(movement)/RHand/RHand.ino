@@ -1,8 +1,3 @@
-//Real-time velocity estimation and low-pass filtering
-//Velocity-based adaptive PID tuning
-//Full PID with prediction and deceleration zone
-//Dynamic PWM with ramping and deceleration handling
-//Stores/loads current, min, and max positions
 
 
 #include <EEPROM.h>  // Library for EEPROM to store position
@@ -203,13 +198,13 @@ void handleLimitHit() {
 // Motor control function ()
 void setMotor(int dir, int pwmVal, int pwm, int in1, int in2) {
   analogWrite(pwm, pwmVal);  
-  if (dir == 1) {  
+  if (dir == 1) {  //up
     digitalWrite(in1, LOW);
     digitalWrite(in2, HIGH);
-  } else if (dir == -1) {  
+  } else if (dir == -1) {  //down
     digitalWrite(in1, HIGH);
     digitalWrite(in2, LOW);
-  } else {  
+  } else {   //stop
     digitalWrite(in1, LOW);
     digitalWrite(in2, LOW);
   }
@@ -235,7 +230,7 @@ void readSensor() {
 // Calibration function
 void calibratePosition() {
   Serial.println("Calibrating: Finding lower limit...");
-  setMotor(-1, 150, PWM, IN1, IN2);  
+  setMotor(-1, 150, PWM, IN1, IN2);  //down
   while (digitalRead(LOWER_LIMIT_PIN) == HIGH) {
     delay(10);  
   }
@@ -249,7 +244,7 @@ void calibratePosition() {
 
   Serial.println("Calibrating: Finding upper limit...");
   pos = 0;  
-  setMotor(1, 150, PWM, IN1, IN2);  
+  setMotor(1, 150, PWM, IN1, IN2);  //up
   while (digitalRead(UPPER_LIMIT_PIN) == HIGH) {
     delay(10);  
   }
@@ -264,9 +259,7 @@ void calibratePosition() {
   setMotor(-1, 150, PWM, IN1, IN2);  
   delay(500);  
   setMotor(0, 0, PWM, IN1, IN2);
-
-  Serial.println("Moving to initial position...");
-  moveToPosition(INITIAL_POS);  
+  
   EEPROM.write(0, pos);  
   Serial.print("Calibration complete, stopped at position: ");
   Serial.println(pos);
